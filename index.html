@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vocabulary Builder</title>
+<style>
+body{font-family:Arial;background:#fff7ed;padding:25px}
+main{max-width:650px;margin:auto;background:white;padding:30px;border-radius:16px}
+input{width:100%;padding:12px;box-sizing:border-box;margin:8px 0;border:1px solid #fdba74;border-radius:8px}
+button{background:#ea580c;color:white;border:0;padding:12px 18px;border-radius:7px;cursor:pointer}
+.word{background:#ffedd5;padding:18px;margin:12px 0;border-radius:10px;overflow-wrap:anywhere}
+</style>
+</head>
+<body>
+<main>
+<h1>Vocabulary Builder</h1>
+<p>Build your personal vocabulary collection.</p>
+<input id="word" placeholder="Enter a new word">
+<input id="meaning" placeholder="Enter its meaning">
+<button onclick="addWord()">Save Word</button>
+<hr>
+<input id="search" placeholder="Search vocabulary..." oninput="render()">
+<h3 id="total"></h3>
+<div id="words"></div>
+</main>
+<script>
+let words=JSON.parse(localStorage.getItem("vocabularyWords")||"[]");
+function save(){
+ localStorage.setItem("vocabularyWords",JSON.stringify(words));
+ render();
+}
+function addWord(){
+ const word=document.getElementById("word");
+ const meaning=document.getElementById("meaning");
+ if(!word.value.trim()||!meaning.value.trim())return;
+ words.unshift({word:word.value.trim(),meaning:meaning.value.trim()});
+ word.value=meaning.value="";
+ save();
+}
+function render(){
+ const list=document.getElementById("words");
+ const query=document.getElementById("search").value.toLowerCase();
+ list.innerHTML="";
+ words.forEach((item,i)=>{
+  if(!item.word.toLowerCase().includes(query)&&
+  !item.meaning.toLowerCase().includes(query))return;
+  const div=document.createElement("div");
+  div.className="word";
+  const title=document.createElement("h3");
+  title.textContent=item.word;
+  const meaning=document.createElement("p");
+  meaning.textContent=item.meaning;
+  const btn=document.createElement("button");
+  btn.textContent="Remove";
+  btn.onclick=()=>{
+   words.splice(i,1);
+   save();
+  };
+  div.append(title,meaning,btn);
+  list.appendChild(div);
+ });
+ document.getElementById("total").textContent="Total Words: "+words.length;
+}
+render();
+</script>
+</body>
+</html>
