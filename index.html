@@ -2,66 +2,112 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Vocabulary Builder</title>
 <style>
-body{font-family:Arial;background:#fff7ed;padding:25px}
-main{max-width:650px;margin:auto;background:white;padding:30px;border-radius:16px}
-input{width:100%;padding:12px;box-sizing:border-box;margin:8px 0;border:1px solid #fdba74;border-radius:8px}
-button{background:#ea580c;color:white;border:0;padding:12px 18px;border-radius:7px;cursor:pointer}
-.word{background:#ffedd5;padding:18px;margin:12px 0;border-radius:10px;overflow-wrap:anywhere}
+body{font-family:Arial;background:#f5f3ff;padding:25px}
+main{max-width:650px;margin:auto;background:white;padding:25px;border-radius:15px}
+input,textarea{width:100%;padding:12px;margin:8px 0;box-sizing:border-box}
+textarea{height:75px}
+button{padding:10px 15px;background:#7c3aed;color:white;border:0;border-radius:7px;cursor:pointer}
+.card{background:#ede9fe;padding:15px;margin:12px 0;border-radius:9px}
+.card button{margin:5px 5px 0 0}
 </style>
 </head>
 <body>
 <main>
 <h1>Vocabulary Builder</h1>
-<p>Build your personal vocabulary collection.</p>
-<input id="word" placeholder="Enter a new word">
-<input id="meaning" placeholder="Enter its meaning">
+<p>Save new words, meanings and examples.</p>
+
+<input id="word" placeholder="English word">
+<input id="meaning" placeholder="Meaning">
+<textarea id="example" placeholder="Example sentence"></textarea>
 <button onclick="addWord()">Save Word</button>
-<hr>
-<input id="search" placeholder="Search vocabulary..." oninput="render()">
-<h3 id="total"></h3>
-<div id="words"></div>
+
+<h2>My Vocabulary</h2>
+<input id="search" placeholder="Search vocabulary...">
+<p id="summary"></p>
+<div id="list"></div>
 </main>
 <script>
-let words=JSON.parse(localStorage.getItem("vocabularyWords")||"[]");
+let words=JSON.parse(localStorage.getItem("myVocabulary")||"[]");
+
 function save(){
- localStorage.setItem("vocabularyWords",JSON.stringify(words));
+ localStorage.setItem("myVocabulary",JSON.stringify(words));
  render();
 }
+
 function addWord(){
- const word=document.getElementById("word");
- const meaning=document.getElementById("meaning");
- if(!word.value.trim()||!meaning.value.trim())return;
- words.unshift({word:word.value.trim(),meaning:meaning.value.trim()});
- word.value=meaning.value="";
+ const word=document.getElementById("word").value.trim();
+ const meaning=document.getElementById("meaning").value.trim();
+ const example=document.getElementById("example").value.trim();
+
+ if(!word||!meaning){
+  alert("Word and meaning are required.");
+  return;
+ }
+
+ if(words.some(x=>x.word.toLowerCase()===word.toLowerCase())){
+  alert("This word already exists.");
+  return;
+ }
+
+ words.unshift({word,meaning,example,learned:false});
+
+ document.getElementById("word").value="";
+ document.getElementById("meaning").value="";
+ document.getElementById("example").value="";
  save();
 }
+
 function render(){
- const list=document.getElementById("words");
  const query=document.getElementById("search").value.toLowerCase();
+ const list=document.getElementById("list");
  list.innerHTML="";
- words.forEach((item,i)=>{
-  if(!item.word.toLowerCase().includes(query)&&
-  !item.meaning.toLowerCase().includes(query))return;
-  const div=document.createElement("div");
-  div.className="word";
-  const title=document.createElement("h3");
-  title.textContent=item.word;
+
+ const filtered=words.filter(x=>
+ x.word.toLowerCase().includes(query)||
+ x.meaning.toLowerCase().includes(query)
+ );
+
+ filtered.forEach(item=>{
+  const index=words.indexOf(item);
+  const card=document.createElement("div");
+  card.className="card";
+
+  const heading=document.createElement("h3");
+  heading.textContent=item.word;
   const meaning=document.createElement("p");
-  meaning.textContent=item.meaning;
-  const btn=document.createElement("button");
-  btn.textContent="Remove";
-  btn.onclick=()=>{
-   words.splice(i,1);
+  meaning.textContent="Meaning: "+item.meaning;
+  const example=document.createElement("p");
+  example.textContent="Example: "+(item.example||"Not provided");
+  const status=document.createElement("p");
+  status.textContent=item.learned?"Learned ✓":"Not learned yet";
+
+  const toggle=document.createElement("button");
+  toggle.textContent=item.learned?"Mark Unlearned":"Mark Learned";
+  toggle.onclick=()=>{
+   words[index].learned=!words[index].learned;
    save();
   };
-  div.append(title,meaning,btn);
-  list.appendChild(div);
+
+  const del=document.createElement("button");
+  del.textContent="Delete";
+  del.onclick=()=>{
+   words.splice(index,1);
+   save();
+  };
+
+  card.append(heading,meaning,example,status,toggle,del);
+  list.appendChild(card);
  });
- document.getElementById("total").textContent="Total Words: "+words.length;
+
+ const learned=words.filter(x=>x.learned).length;
+ document.getElementById("summary").textContent=
+ `${words.length} words saved | ${learned} learned`;
 }
+
+document.getElementById("search").addEventListener("input",render);
 render();
 </script>
 </body>
