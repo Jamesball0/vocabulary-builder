@@ -21,3 +21,12 @@ Enter a new word and its meaning, then save it.
 ## Running Locally
 
 Open `index.html` in a modern web browser.
+## Manual Testing Checklist
+
+- [ ] Save a new word and its meaning.
+- [ ] Search for the saved word.
+- [ ] Mark a word learned and confirm its status updates.
+
+### Test Notes
+
+Record the observed result and any reproducible issue after running the tests.
